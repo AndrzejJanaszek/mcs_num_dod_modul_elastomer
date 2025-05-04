@@ -79,70 +79,30 @@ double calc_polynomial(std::vector<double> coeffs, double x){
 
 int main(int argc, char const *argv[])
 {
-   /*  // h0 - poczatkowa dlugosc materialu
-    const double h = 1;
+    // *uwaga* punkt (0,0) - jest brany dla odkształcenia wstępnego 10%
     
-    // ### 3
-    double start_stress = 0;
-
-    // ### 4 i 5
-    int best_index = find_closest_point_stress(start_stress);
-    double stress_ps = y_stress[best_index];
-    double strain_ps = x_strain[best_index];
-    double absolute_deformation_ps = h * strain_ps;    // dl_ps = h0 * epsilon[%]
-
-    // 6
-    double l0 = h + absolute_deformation_ps; // l0 = h + dl_ps
-
-    // 7 wykres epsilon(naprezenia)
-
-    // 8    E = 10%, 30%, 60%
-    double EpsilonL_1 = 0.1;
-    double EpsilonL_2 = 0.3;
-    double EpsilonL_3 = 0.6;
-
-    // dl = E_l * l0 + dl_ps
-    // wartości x dla danych odkształceń El (epsilon l)
-    double new_dl_1 = EpsilonL_1 * l0 + absolute_deformation_ps;
-    double new_dl_2 = EpsilonL_2 * l0 + absolute_deformation_ps;
-    double new_dl_3 = EpsilonL_3 * l0 + absolute_deformation_ps;
-
-    // delta sigma - wartość y z wykresu dla kolejnych El (epsilon l)
-    double sigma_1 = y_stress[find_closest_point_strain(new_dl_1)];
-    double sigma_2 = y_stress[find_closest_point_strain(new_dl_2)];
-    double sigma_3 = y_stress[find_closest_point_strain(new_dl_3)];
-
-
-    // MODULY SIECZNE
-    double dSigma1 = sigma_1 - stress_ps;
-    double dSigma2 = sigma_2 - stress_ps;
-    double dSigma3 = sigma_3 - stress_ps;
-    double E_1 = dSigma1 / EpsilonL_1;
-    double E_1 = dSigma2 / EpsilonL_2;
-    double E_1 = dSigma3 / EpsilonL_3; */
-
-    // odksztalcenie  strain    [%]
+    // odksztalcenie - strain    [%]
     std::vector<double> x_values = { 
-        10.558997642412209, 20.263961250036015, 30.745340190475133,
-        40.450303798098936, 50.93164127443481, 60.24841794770258, 70.34160995378562
+        10.643999745028083, 20.304102923051225, 30.679778357867743, 40.33988153589087, 40.33988153589087, 51.073327813018125, 60.37567543481654, 70.75135086963306
     };
 
     // naprezenie - stress      [MPa]
     std::vector<double> y_values = {
-        9.833505087516746, 9.139774153357092, 8.29958890172689,
-        7.806269117176516, 7.536484956482864, 7.467111945398491, 7.582733699148773
+        13.270139553050981, 27.203794815976156, 43.98104414388616, 53.93365070698346, 53.93365070698346, 59.19431460994837, 60.616114679735276, 58.34123274569954
     };
 
 
     const double h = 1;
 
     // wyliczenie wartości początkowych dla zadanego odkształcenia wstępnego = 10%
-    double naprezenie_pocz      = y_values[0] * 0.01;  // zamiana z % na liczbe
-    double odksztalcenie_pocz   = x_values[0] * 0.01;  // zamiana z % na liczbe
+    double naprezenie_pocz      = y_values[0]; 
+    double odksztalcenie_pocz   = x_values[0];
 
-    double l_0 = h + h*odksztalcenie_pocz;      // h + dl
+    //                                    zmiana jednostki % na liczbę
+    double l_0 = h + h*odksztalcenie_pocz*0.01;      // h + dl
 
-    // korekta dla zadanego odksztalcenie poczatkowe
+    // korekta dla zadanego odksztalcenia poczatkowego
+    // przesunięcie wykresu do punktu (0,0)
     std::vector<double> x_corrected;
     std::vector<double> y_corrected;
     x_corrected.reserve( x_values.size());
@@ -153,6 +113,16 @@ int main(int argc, char const *argv[])
         x_corrected.push_back(x_values[i] - odksztalcenie_pocz);
     }
 
+    printf("### Wartości po przeliczeniu:\n");
+    printf("x:\n");
+    for(int i = 0; i < x_corrected.size(); i++){
+        printf("%0.15lf, ",x_corrected[i]);
+    }
+    printf("\ny:\n");
+    for(int i = 0; i < y_corrected.size(); i++){
+        printf("%0.15lf, ",y_corrected[i]);
+    }
+    
     // wyznaczanie modułów siecznych
     // moduly sieczne   20%, 30%, 40%, 50%, 60%, 70%
     std::vector<double> EpsilonL = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7};
@@ -166,9 +136,12 @@ int main(int argc, char const *argv[])
     // a0 = coeffs[0] = wyraz wolny
     std::vector<double> coeffs = least_squares_polynomial_6(x_corrected, y_corrected);
 
-    printf("\nmaprox coeffs:\n");
+
+    printf("\n\n### Współczynniki wielomianu aproksymującego oraz pochodnej:\n");
+    printf("maprox coeffs:\n");
+    printf("a0-a6:\n");
     for(int i = 0; i < coeffs.size(); i++){
-        printf("a%d: %0.15lf, ", i,coeffs[i]);
+        printf("%0.15lf, ",coeffs[i]);
     }
     // a6 + a5 + a4 + a3 + a2 + a1 + a0 
     // ^6 + ^5 + ^4 + ^3 + ^2 + ^1 + ^0 
@@ -180,9 +153,10 @@ int main(int argc, char const *argv[])
     std::vector<double> coeffs_der = std::vector(6, 0.0);
 
     printf("\nderivative coeffs:\n");
+    printf("a0-a6:\n");
     for(int i = 0; i < coeffs_der.size(); i++){
         coeffs_der[i] = i * coeffs[i];
-        printf("a%d: %0.15lf", i, coeffs_der[i]);
+        printf("%0.15lf",coeffs_der[i]);
     }
 
     // wyznaczenie modulow stycznych
@@ -196,17 +170,15 @@ int main(int argc, char const *argv[])
 
 
     // wypisanie wyników
-    printf("\n### MODULY SIECZNE:\n");
+    printf("\n\n### MODULY SIECZNE:\n");
     for(int i = 0; i < El.size(); i++){
         // EpsilonL
         printf("%2.0lf\%: E = %lf\n", EpsilonL[i]*100, El[i]);
-
     }
     printf("\n### MODULY STYCZNE:\n");
     for(int i = 0; i < E_st.size(); i++){
         // EpsilonL
         printf("%2.0lf\%: E_st = %lf\n", EpsilonL[i]*100, E_st[i]);
-
     }
 
     return 0;
