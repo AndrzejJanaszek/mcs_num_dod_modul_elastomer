@@ -67,6 +67,10 @@ std::vector<double> least_squares_polynomial_6(const std::vector<double> &xs, co
     std::vector<double> b(degree + 1, 0.0);
 
     // Wypełnianie macierzy normalnej
+    // macierz - układ równań powstaje z:
+    // S_i = [ f(x) - W_6 ] ^2
+    // gdzie W_6 -> a_0 + a_1*x + a_2*x^2 .... a_6*x^6
+    // mamy 7 punktów więc będzie 7 równań liniowych czyli docelowo macierz 7x8 bo A|B
     for (int i = 0; i <= degree; i++)
     {
         for (int j = 0; j <= degree; j++)
